@@ -1,7 +1,0 @@
-//Registers
-
-module registers(
-
-);
-
-endmodule

@@ -6,19 +6,20 @@
 
 ```mermaid
 flowchart TD
-    A(RAM) <--> B(Memory Controller)
-    B <--> C(Instruction Cache)
-    C --> D(Decoder)
-    D --> E(Instruction Queue)
+    A(RAM) --- B(Memory Controller)
+    B <--> C(ICache)
+    C --> D(IFetcher) 
+    D --> E(Issue Unit)
+    D --- L(Predictor)
     E --> F(Reservation Station)
     E --> G(Reorder Buffer)
     F --> G
-    G <--> H(Registers)
+    G <--> H(Register File)
     G --> I(Load Store Buffer)
     I --> B
     J(CDB) <--> G
     J <--> F 
     J <--> D 
     J <--> I
-    K(ALU) <--> F
+    K(ALU) --- F
 ```
