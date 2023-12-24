@@ -6,4 +6,9 @@
 
 `define ICEntries   512
 
+`define RegWidth    5
+
+`define ROBWidth    5
+`define ROBSize     32
+
 `endif
