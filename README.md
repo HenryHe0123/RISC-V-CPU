@@ -10,6 +10,7 @@ flowchart TD
     B --- C(ICache)
     C --> D(IFetcher) 
     D --> E(Instruction Queue)
+    D --- M(Decoder)
     D --- L(Predictor)
     E --> F(Reservation Station)
     E --> G(Reorder Buffer)
