@@ -1,42 +1,52 @@
 //Register File
+//combinational logic for Q, V, R query (controlled by issue_valid)
+//sequential logic for rename and commit/rollback
 
 `include "defines.v"
 
 module regFile(
         input wire clk, rst, rdy,
 
-        //IQueue
-        input wire IQ_valid,
-        input wire [`RegWidth - 1:0] IQ_rs1,
-        input wire [`RegWidth - 1:0] IQ_rs2,
-        input wire [`RegWidth - 1:0] IQ_rd,    //reg index, 4:0
-        input wire [`ROBWidth - 1:0] IQ_rdTag, //ROB dependency of rd, also 4:0
+        //issue
+        input wire              issue_valid,
+        input wire  [4:0]       issue_rs1,   //reg index
+        input wire  [4:0]       issue_rs2,
+        input wire  [4:0]       issue_rd,    
 
-        output wire [`ROBWidth - 1:0] Qj_to_IQ,
-        output wire [`ROBWidth - 1:0] Qk_to_IQ,
-        output wire [31:0] Vj_to_IQ,
-        output wire [31:0] Vk_to_IQ,
+        output wire [`ROBRange] issue_Qj,
+        output wire [`ROBRange] issue_Qk,
+        output wire [31:0]      issue_Vj,
+        output wire [31:0]      issue_Vk,
+        output wire             issue_Rj,
+        output wire             issue_Rk,
+
+        //rename
+        input wire              rename_valid, //controlled by dispatcher
+        input wire  [`ROBRange] issue_rdTag,  //ROB dependency of rd, from dispatcher
 
         //ROB
-        input wire ROB_valid,
-        input wire [`RegWidth - 1:0] ROB_rd,
-        input wire [`ROBWidth - 1:0] ROB_rdTag,
-        input wire [31:0] ROB_rdVal,
+        input wire              commit_valid, //from ROB
+        input wire  [4:0]       ROB_rd,
+        input wire  [`ROBRange] ROB_rdTag,
+        input wire  [31:0]      ROB_rdVal,
 
-        input wire rollback //predict wrong
+        input wire              rollback   //predict wrong
     );
 
     parameter REG_NUM = 32;
 
-    reg [31:0]            regVal  [REG_NUM - 1:0];
-    reg [`ROBWidth - 1:0] regTag  [REG_NUM - 1:0];
-    reg                   regBusy [REG_NUM - 1:0];
+    reg [31:0]      regVal  [REG_NUM - 1:0];
+    reg [`ROBRange] regTag  [REG_NUM - 1:0];
+    reg             regBusy [REG_NUM - 1:0];
 
-    assign Qj_to_IQ = IQ_valid ? regTag[IQ_rs1] : 0;
-    assign Qk_to_IQ = IQ_valid ? regTag[IQ_rs2] : 0;
+    assign issue_Qj = issue_valid ? regTag[issue_rs1] : 0;
+    assign issue_Qk = issue_valid ? regTag[issue_rs2] : 0;
 
-    assign Vj_to_IQ = (IQ_valid && ~regBusy[IQ_rs1]) ? regVal[IQ_rs1] : 0;
-    assign Vk_to_IQ = (IQ_valid && ~regBusy[IQ_rs2]) ? regVal[IQ_rs2] : 0;
+    assign issue_Vj = (issue_valid && ~regBusy[issue_rs1]) ? regVal[issue_rs1] : 0;
+    assign issue_Vk = (issue_valid && ~regBusy[issue_rs2]) ? regVal[issue_rs2] : 0;
+
+    assign issue_Rj = (issue_valid && ~regBusy[issue_rs1]) ? `True : `False; //true: ready (unbusy)
+    assign issue_Rk = (issue_valid && ~regBusy[issue_rs2]) ? `True : `False;
 
     integer i;
 
@@ -49,22 +59,25 @@ module regFile(
             end
         end
         else if (rdy) begin
-            if (rollback) begin //no rd for branch instruction
+            if (rollback) begin
                 for (i = 0; i < REG_NUM; i = i + 1) begin
                     regTag[i] <= 0;
                     regBusy[i] <= `False;
                 end
             end
-            else if (ROB_valid && ROB_rd != 0) begin //commit
-                regVal[ROB_rd] <= ROB_rdVal;
-                if (regBusy[ROB_rd] && ROB_rdTag == regTag[ROB_rd]) begin
-                    regTag[ROB_rd] <= 0;
-                    regBusy[ROB_rd] <= `False;
+            else begin
+                if (commit_valid && ROB_rd != 0) begin //commit
+                    regVal[ROB_rd] <= ROB_rdVal;
+                    if (regBusy[ROB_rd] && ROB_rdTag == regTag[ROB_rd]) begin
+                        regTag[ROB_rd] <= 0;
+                        regBusy[ROB_rd] <= `False;
+                    end
                 end
-            end
-            else if (IQ_valid && IQ_rd != 0) begin //set dependency
-                regTag[IQ_rd] <= IQ_rdTag;
-                regBusy[IQ_rd] <= `True;
+                
+                if (rename_valid && IQ_rd != 0) begin //rename
+                    regTag[IQ_rd] <= issue_rdTag;
+                    regBusy[IQ_rd] <= `True;
+                end
             end
         end
     end

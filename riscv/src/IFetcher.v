@@ -5,7 +5,7 @@
 `include "decoder.v"
 
 module IFetcher(
-        input wire clk, rst, rdy
+        input wire clk, rst, rdy,
 
         //icache
         input  wire        icache_valid,
@@ -13,22 +13,26 @@ module IFetcher(
         output wire        icache_enable,
         output wire [31:0] pc_to_icache,
 
-        //issue
+        //issue (to several modules)
         output reg         issue_enable,
-        output wire [31:0] inst_to_issue,
-        output reg  [31:0] pc_to_issue,
-        output wire        predict_to_issue,
+        output wire [31:0] issue_inst, 
+        output reg  [31:0] issue_pc,
+        output wire        issue_predict,
 
         //decode
-        output reg [5:0]  optype_to_issue,
-        output reg [4:0]  rs1_to_issue,
-        output reg [4:0]  rs2_to_issue,
-        output reg [4:0]  rd_to_issue,
-        output reg [31:0] imm_to_issue,
+        output reg [5:0]  issue_optype,
+        output reg [4:0]  issue_rs1,
+        output reg [4:0]  issue_rs2,
+        output reg [4:0]  issue_rd,
+        output reg [31:0] issue_imm,
+
+        //alu
+        input wire        jalr_valid, //jalr compute finished at ALU
+        input wire [31:0] jalr_pc,
 
         //rob
         input wire        ROB_full,
-        input wire        ROB_jump_flag, //1: jalr/branch(wrong)
+        input wire        ROB_branch_wrong, //rollback
         input wire [31:0] ROB_target_pc, //target pc when jump flag is true
 
         //predict
@@ -46,8 +50,8 @@ module IFetcher(
     wire       predict;
 
     assign pc_to_icache = pc;
-    assign predict_to_issue = predict;
-    assign inst_to_issue = icache_inst;
+    assign issue_predict = predict;
+    assign issue_inst = icache_inst;
     assign icache_enable = ~(stall || ROB_full || LSB_full || RS_full);
 
     predictor _predictor(
@@ -81,8 +85,13 @@ module IFetcher(
             stall <= `False;
         end
         else if (rdy) begin
-            if (ROB_jump_flag) begin
+            if (ROB_branch_wrong) begin
                 pc <= target_pc;
+                stall <= `False;
+                issue_enable <= `False;
+            end
+            else if(jalr_valid) begin
+                pc <= jalr_pc;
                 stall <= `False;
                 issue_enable <= `False;
             end
@@ -93,12 +102,12 @@ module IFetcher(
                 if (icache_valid) begin
                     issue_enable <= `True;
                     //prepare to issue
-                    pc_to_issue <= pc;
-                    optype_to_issue <= optype;
-                    rs1_to_issue <= rs1;
-                    rs2_to_issue <= rs2;
-                    rd_to_issue <= rd;
-                    imm_to_issue <= imm;
+                    issue_pc <= pc;
+                    issue_optype <= optype;
+                    issue_rs1 <= rs1;
+                    issue_rs2 <= rs2;
+                    issue_rd <= rd;
+                    issue_imm <= imm;
                     //update pc or stall for jalr
                     if ((opcode == `BOP && predict) || opcode == `JAL) begin
                         pc <= pc + imm; //branch taken or jal

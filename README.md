@@ -8,8 +8,8 @@
 flowchart TD
     A(RAM) --- B(Memory Controller)
     B --- C(ICache)
-    C --> D(IFetcher) 
-    D --> E(Instruction Queue)
+    C --> D(IFetcher)
+    D --> E(Dispatcher)
     D --- M(Decoder)
     D --- L(Predictor)
     E --> F(Reservation Station)
