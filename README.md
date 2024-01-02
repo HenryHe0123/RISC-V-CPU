@@ -11,16 +11,15 @@ flowchart TD
     C --> D(IFetcher)
     D --> E(Dispatcher)
     D --- M(Decoder)
-    D --- L(Predictor)
+    D --- N(Predictor)
     E --> F(Reservation Station)
     E --> G(Reorder Buffer)
     F --> G
     G --- H(Register File)
+    E --> H
     G --> I(Load Store Buffer)
     I --> B
-    J(CDB) --- G
-    J --- F 
-    J --- D 
-    J --- I
-    K(ALU) --- F
+    I --> J(CDB-L)
+    F --> K(ALU)
+    K --> L(CDB-A)
 ```
