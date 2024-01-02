@@ -12,6 +12,8 @@
 `define ROBWidth    5
 `define ROBSize     32
 
+`define RSSize      16
+
 `define PredRange   9:3  //7
 `define PredSize    128
 
