@@ -62,7 +62,7 @@ module IFetcher(
                   .predict(predict),
                   .update_flag(ROB_predict_flag),
                   .update_pc(ROB_branch_pc),
-                  .update_result(ROB_branch_result),
+                  .update_result(ROB_branch_result)
               );
 
     wire [6:0]  opcode = icache_inst[6:0];
@@ -86,7 +86,7 @@ module IFetcher(
         end
         else if (rdy) begin
             if (ROB_branch_wrong) begin
-                pc <= target_pc;
+                pc <= ROB_target_pc;
                 stall <= `False;
                 issue_enable <= `False;
             end

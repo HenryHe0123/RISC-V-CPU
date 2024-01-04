@@ -42,9 +42,9 @@ module decoder(
             end
             `ROP: begin
                 rs2 = inst[24:20];
-                case (funct3)
+                case (func3)
                     3'b000: begin
-                        case (funct7)
+                        case (func7)
                             7'b0000000:
                                 optype = `ADD;
                             7'b0100000:
@@ -60,7 +60,7 @@ module decoder(
                     3'b100:
                         optype = `XOR;
                     3'b101: begin
-                        case (funct7)
+                        case (func7)
                             7'b0000000:
                                 optype = `SRL;
                             7'b0100000:
@@ -75,7 +75,7 @@ module decoder(
             end
             `IOP: begin
                 imm = { {21{inst[31]}}, inst[30:20] };
-                case (funct3)
+                case (func3)
                     3'b000:
                         optype = `ADDI;
                     3'b001:
@@ -87,7 +87,7 @@ module decoder(
                     3'b100:
                         optype = `XORI;
                     3'b101: begin
-                        case (funct7)
+                        case (func7)
                             7'b0000000:
                                 optype = `SRLI;
                             7'b0100000:
@@ -102,7 +102,7 @@ module decoder(
             end
             `LOP: begin
                 imm = { {21{inst[31]}}, inst[30:20] };
-                case (funct3)
+                case (func3)
                     3'b000:
                         optype = `LB;
                     3'b001:
@@ -119,7 +119,7 @@ module decoder(
                 rd = 0;
                 rs2 = inst[24:20];
                 imm = { {21{inst[31]}}, inst[30:25], inst[11:7] };
-                case (funct3)
+                case (func3)
                     3'b000:
                         optype = `SB;
                     3'b001:
@@ -132,7 +132,7 @@ module decoder(
                 rd = 0;
                 rs2 = inst[24:20];
                 imm = { {20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0 };
-                case (funct3)
+                case (func3)
                     3'b000:
                         optype = `BEQ;
                     3'b001:

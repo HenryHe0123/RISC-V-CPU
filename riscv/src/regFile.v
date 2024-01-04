@@ -24,7 +24,7 @@ module regFile(
         input wire              rename_valid, //controlled by dispatcher
         input wire  [`ROBRange] issue_rdTag,  //ROB dependency of rd, from dispatcher
 
-        //ROB
+        //rob
         input wire              commit_valid, //from ROB
         input wire  [4:0]       ROB_rd,
         input wire  [`ROBRange] ROB_rdTag,
@@ -74,9 +74,9 @@ module regFile(
                     end
                 end
                 
-                if (rename_valid && IQ_rd != 0) begin //rename
-                    regTag[IQ_rd] <= issue_rdTag;
-                    regBusy[IQ_rd] <= `True;
+                if (rename_valid && issue_rd != 0) begin //rename
+                    regTag[issue_rd] <= issue_rdTag;
+                    regBusy[issue_rd] <= `True;
                 end
             end
         end

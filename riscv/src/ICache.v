@@ -9,10 +9,10 @@ module ICache(
         input wire clk, rst, rdy,
 
         //mctrl
-        input wire        mem_valid,
-        input wire [31:0] mem_din,  // data(inst) from mctrl
-        output reg [31:0] mem_aout, // address to mctrl
-        output reg        mem_enable,
+        input  wire        mem_valid,
+        input  wire [31:0] mem_din,  // data(inst) from mctrl
+        output wire [31:0] mem_aout, // address to mctrl
+        output wire        mem_enable,
 
         //ifetcher
         input wire        ifetch_valid,

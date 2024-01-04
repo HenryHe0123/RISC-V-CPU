@@ -14,26 +14,26 @@ module memCtrl(
         input wire io_buffer_full, // 1 if uart buffer is full, io invalid now
 
         //icache
-        input wire        ic_valid,
-        input wire [31:0] ic_ain,  // address from icache
-        output reg        ic_enable,
-        output reg [31:0] ic_dout,  // data(inst) to icache
+        input wire        icache_valid,
+        input wire [31:0] icache_ain,  // address from icache
+        output reg        icache_enable,
+        output reg [31:0] icache_dout,  // data(inst) to icache
 
         //lsb
-        input wire        lsb_valid,
-        input wire        lsb_wr,   // 0: read, 1: write
-        input wire [31:0] lsb_ain,  // address from lsb
-        input wire [31:0] lsb_din,  // data(to be stored) from lsb
-        output reg        lsb_enable,
-        output reg [31:0] lsb_dout  // data to lsb
+        input wire        LSB_valid,
+        input wire        LSB_wr,   // 0: read, 1: write
+        input wire [31:0] LSB_ain,  // address from lsb
+        input wire [31:0] LSB_din,  // data(to be stored) from lsb
+        output reg        LSB_enable,
+        output reg [31:0] LSB_dout  // data to lsb
     );
 
     parameter IDLE = 0, IFETCH = 1, LOAD = 2, STORE = 3;
 
     reg [1:0] status;
     reg [1:0] pos; // position in a word
-    wire      lsb_io = (lsb_ain[17:16] == 2'b11);
-    wire      io_fail = lsb_io && io_buffer_full;
+    wire      LSB_io = (LSB_ain[17:16] == 2'b11);
+    wire      io_fail = LSB_io && io_buffer_full;
 
     always @(posedge clk) begin
         if (rst) begin
@@ -41,30 +41,30 @@ module memCtrl(
             mem_wr <= 0; // read
             status <= IDLE;
             pos <= 0;
-            ic_enable <= `False;
-            lsb_enable <= `False;
+            icache_enable <= `False;
+            LSB_enable <= `False;
         end
         else if (~rdy) begin // pause
             mem_a <= 0;
             mem_wr <= 0;
-            ic_enable <= `False;
-            lsb_enable <= `False;
+            icache_enable <= `False;
+            LSB_enable <= `False;
         end
         else begin
             case(status)
                 IDLE: begin
-                    ic_enable <= `False;
-                    lsb_enable <= `False;
+                    icache_enable <= `False;
+                    LSB_enable <= `False;
                     pos <= 0;
-                    if (ic_valid) begin
-                        mem_a <= ic_ain;
+                    if (icache_valid) begin
+                        mem_a <= icache_ain;
                         mem_wr <= 0;
                         status <= IFETCH;
                     end
-                    else if (lsb_valid) begin
-                        mem_wr <= lsb_wr;
-                        mem_a <= lsb_ain;
-                        if(lsb_wr) begin // write
+                    else if (LSB_valid) begin
+                        mem_wr <= LSB_wr;
+                        mem_a <= LSB_ain;
+                        if(LSB_wr) begin // write
                             status <= STORE;
                         end
                         else begin // read
@@ -73,20 +73,20 @@ module memCtrl(
                     end
                 end
                 IFETCH: begin
-                    if(ic_valid) begin
+                    if(icache_valid) begin
                         case (pos)
                             2'd0:
-                                ic_dout[7:0] <= mem_din;
+                                icache_dout[7:0] <= mem_din;
                             2'd1:
-                                ic_dout[15:8] <= mem_din;
+                                icache_dout[15:8] <= mem_din;
                             2'd2:
-                                ic_dout[23:16] <= mem_din;
+                                icache_dout[23:16] <= mem_din;
                             2'd3:
-                                ic_dout[31:24] <= mem_din;
+                                icache_dout[31:24] <= mem_din;
                         endcase
                         if (pos == 2'd3) begin
                             status <= IDLE;
-                            ic_enable <= `True;
+                            icache_enable <= `True;
                         end
                         else begin
                             pos <= pos + 1;
@@ -98,20 +98,20 @@ module memCtrl(
                     end
                 end
                 LOAD: begin
-                    if (lsb_valid) begin
+                    if (LSB_valid) begin
                         case (pos)
                             2'd0:
-                                lsb_dout[7:0] <= mem_din;
+                                LSB_dout[7:0] <= mem_din;
                             2'd1:
-                                lsb_dout[15:8] <= mem_din;
+                                LSB_dout[15:8] <= mem_din;
                             2'd2:
-                                lsb_dout[23:16] <= mem_din;
+                                LSB_dout[23:16] <= mem_din;
                             2'd3:
-                                lsb_dout[31:24] <= mem_din;
+                                LSB_dout[31:24] <= mem_din;
                         endcase
                         if (pos == 2'd3) begin
                             status <= IDLE;
-                            lsb_enable <= `True;
+                            LSB_enable <= `True;
                         end
                         else begin
                             pos <= pos + 1;
@@ -123,20 +123,20 @@ module memCtrl(
                     end
                 end
                 STORE: begin
-                    if (lsb_valid && ~io_fail) begin
+                    if (LSB_valid && ~io_fail) begin
                         case (pos)
                             2'd0:
-                                mem_dout <= lsb_din[7:0];
+                                mem_dout <= LSB_din[7:0];
                             2'd1:
-                                mem_dout <= lsb_din[15:8];
+                                mem_dout <= LSB_din[15:8];
                             2'd2:
-                                mem_dout <= lsb_din[23:16];
+                                mem_dout <= LSB_din[23:16];
                             2'd3:
-                                mem_dout <= lsb_din[31:24];
+                                mem_dout <= LSB_din[31:24];
                         endcase
                         if (pos == 2'd3) begin
                             status <= IDLE;
-                            lsb_enable <= `True;
+                            LSB_enable <= `True;
                         end
                         else begin
                             pos <= pos + 1;
