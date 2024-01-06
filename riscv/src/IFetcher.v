@@ -27,18 +27,18 @@ module IFetcher(
         output reg [31:0] issue_imm,
 
         //alu
-        input wire        jalr_valid, //jalr compute finished at ALU
+        input wire        jalr_valid, // jalr compute finished at ALU
         input wire [31:0] jalr_pc,
 
         //rob
         input wire        ROB_full,
-        input wire        ROB_branch_wrong, //rollback
-        input wire [31:0] ROB_target_pc, //target pc when jump flag is true
+        input wire        rollback, // ROB branch wrong
+        input wire [31:0] ROB_reset_pc, // reset pc for rollback
 
-        //predict
-        input wire ROB_predict_flag,     //1: branch
-        input wire ROB_branch_result,    //0: not taken, 1: taken (the true result)
-        input wire [31:0] ROB_branch_pc, //the pc of the branch instruction
+        //predict update
+        input wire ROB_predict_updFlag,
+        input wire ROB_branch_updResult,    // 0: not taken, 1: taken (the true result)
+        input wire [31:0] ROB_branch_updPC, // the pc of the branch instruction
 
         //other
         input wire LSB_full,
@@ -60,9 +60,9 @@ module IFetcher(
                   .rdy(rdy),
                   .pc(pc),
                   .predict(predict),
-                  .update_flag(ROB_predict_flag),
-                  .update_pc(ROB_branch_pc),
-                  .update_result(ROB_branch_result)
+                  .update_flag(ROB_predict_updFlag),
+                  .update_pc(ROB_branch_updPC),
+                  .update_result(ROB_branch_updResult)
               );
 
     wire [6:0]  opcode = icache_inst[6:0];
@@ -85,8 +85,8 @@ module IFetcher(
             stall <= `False;
         end
         else if (rdy) begin
-            if (ROB_branch_wrong) begin
-                pc <= ROB_target_pc;
+            if (rollback) begin
+                pc <= ROB_reset_pc;
                 stall <= `False;
                 issue_enable <= `False;
             end

@@ -2,7 +2,7 @@
 
 `include "defines.v"
 
-module IQueue(
+module dispatcher(
         input wire clk, rst, rdy,
 
         //ifetcher
@@ -25,7 +25,7 @@ module IQueue(
 
         //lsb
         input  wire             LSB_full,
-        output reg              LSB_enable //load&store instruction
+        output reg              LSB_enable // load/store instruction
     );
 
     assign issue_rdTag = (ifetch_valid && ~ROB_full) ? ROB_nextTag : 0;
