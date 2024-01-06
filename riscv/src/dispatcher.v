@@ -1,4 +1,5 @@
 //Dispatcher
+//combinational logic
 
 `include "defines.v"
 
@@ -10,7 +11,6 @@ module dispatcher(
         input wire [5:0]        ifetch_optype,
 
         //regfile
-        output wire             reg_issue_enable,
         output reg              reg_rename_enable,
         output wire [`ROBRange] issue_rdTag,
 
@@ -29,7 +29,6 @@ module dispatcher(
     );
 
     assign issue_rdTag = (ifetch_valid && ~ROB_full) ? ROB_nextTag : 0;
-    assign reg_issue_enable = ifetch_valid;
 
     always @(*) begin
         ROB_enable = `False;

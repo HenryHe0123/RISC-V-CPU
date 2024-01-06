@@ -14,7 +14,8 @@ module IFetcher(
         output wire [31:0] pc_to_icache,
 
         //issue (to several modules)
-        output reg         issue_enable,
+        //issue_rdTag/Q/V/R are also controlled by issue_valid signal
+        output reg         issue_valid,
         output wire [31:0] issue_inst, 
         output reg  [31:0] issue_pc,
         output wire        issue_predict,
@@ -88,19 +89,19 @@ module IFetcher(
             if (rollback) begin
                 pc <= ROB_reset_pc;
                 stall <= `False;
-                issue_enable <= `False;
+                issue_valid <= `False;
             end
             else if(jalr_valid) begin
                 pc <= jalr_pc;
                 stall <= `False;
-                issue_enable <= `False;
+                issue_valid <= `False;
             end
             else if (stall || ROB_full || LSB_full || RS_full) begin
-                issue_enable <= `False; //stall issue and ifetch
+                issue_valid <= `False; //stall issue and ifetch
             end
             else begin
                 if (icache_valid) begin
-                    issue_enable <= `True;
+                    issue_valid <= `True;
                     //prepare to issue
                     issue_pc <= pc;
                     issue_optype <= optype;
@@ -120,7 +121,7 @@ module IFetcher(
                     end
                 end
                 else begin
-                    issue_enable <= `False;
+                    issue_valid <= `False;
                 end
             end
         end
