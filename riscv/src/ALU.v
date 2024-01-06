@@ -14,7 +14,7 @@ module ALU(
         input wire [`ROBRange] RS_rdTag,
         input wire [31:0]      RS_pc,
 
-        //broadcast to rs/rob/lsb
+        //cdb-alu
         output reg             bus_enable,
         output reg [31:0]      bus_result, //for br instruction, bus_result = true/false
         output reg [`ROBRange] bus_rdTag,
@@ -35,16 +35,16 @@ module ALU(
             bus_rdTag = RS_rdTag;
             case (RS_op)
                 `LUI:
-                    bus_result = RS_Imm;
+                    bus_result = RS_imm;
                 `AUIPC:
-                    bus_result = RS_pc + RS_Imm;
+                    bus_result = RS_pc + RS_imm;
                 `JAL: begin
                     bus_result = RS_pc + 4;
                 end
                 `JALR: begin
                     bus_result = RS_pc + 4;
                     jalr_valid = `True;
-                    jalr_pc = (RS_Vj + RS_Imm) & 32'hFFFFFFFE;
+                    jalr_pc = (RS_Vj + RS_imm) & 32'hFFFFFFFE;
                 end
                 `BEQ: begin
                     bus_result = RS_Vj == RS_Vk;
@@ -65,23 +65,23 @@ module ALU(
                     bus_result = RS_Vj >= RS_Vk;
                 end
                 `ADDI:
-                    bus_result = RS_Vj + RS_Imm;
+                    bus_result = RS_Vj + RS_imm;
                 `SLTI:
-                    bus_result = $signed(RS_Vj) < $signed(RS_Imm);
+                    bus_result = $signed(RS_Vj) < $signed(RS_imm);
                 `SLTIU:
-                    bus_result = RS_Vj < RS_Imm;
+                    bus_result = RS_Vj < RS_imm;
                 `XORI:
-                    bus_result = RS_Vj ^ RS_Imm;
+                    bus_result = RS_Vj ^ RS_imm;
                 `ORI:
-                    bus_result = RS_Vj | RS_Imm;
+                    bus_result = RS_Vj | RS_imm;
                 `ANDI:
-                    bus_result = RS_Vj & RS_Imm;
+                    bus_result = RS_Vj & RS_imm;
                 `SLLI:
-                    bus_result = RS_Vj << RS_Imm[4:0];
+                    bus_result = RS_Vj << RS_imm[4:0];
                 `SRLI:
-                    bus_result = RS_Vj >> RS_Imm[4:0];
+                    bus_result = RS_Vj >> RS_imm[4:0];
                 `SRAI:
-                    bus_result = $signed(RS_Vj) >>> RS_Imm[4:0];
+                    bus_result = $signed(RS_Vj) >>> RS_imm[4:0];
                 `ADD:
                     bus_result = RS_Vj + RS_Vk;
                 `SUB:
