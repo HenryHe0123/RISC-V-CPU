@@ -7,3 +7,4 @@ riscv/testspace/*
 
 .vscode/*
 riscv/test.data
+riscv/test.c
