@@ -8,9 +8,8 @@ module IFetcher(
         input wire clk, rst, rdy,
 
         //icache
-        input  wire        icache_valid,
+        input  wire        icache_hit,
         input  wire [31:0] icache_inst,
-        output wire        icache_enable,
         output wire [31:0] pc_to_icache,
 
         //issue (to several modules)
@@ -53,7 +52,6 @@ module IFetcher(
     assign pc_to_icache = pc;
     assign issue_predict = predict;
     assign issue_inst = icache_inst;
-    assign icache_enable = ~(stall || ROB_full || LSB_full || RS_full);
 
     predictor _predictor(
                   .clk(clk),
@@ -100,7 +98,7 @@ module IFetcher(
                 issue_valid <= `False; //stall issue and ifetch
             end
             else begin
-                if (icache_valid) begin
+                if (icache_hit) begin
                     issue_valid <= `True;
                     //prepare to issue
                     issue_pc <= pc;
@@ -110,10 +108,10 @@ module IFetcher(
                     issue_rd <= rd;
                     issue_imm <= imm;
                     //update pc or stall for jalr
-                    if ((opcode == `BOP && predict) || opcode == `JAL) begin
+                    if ((opcode == `BOP && predict) || opcode == `JALOP) begin
                         pc <= pc + imm; //branch taken or jal
                     end
-                    else if(opcode == `JALR) begin
+                    else if(opcode == `JALROP) begin
                         stall <= `True;
                     end
                     else begin

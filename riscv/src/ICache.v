@@ -11,52 +11,53 @@ module ICache(
         //mctrl
         input  wire        mem_valid,
         input  wire [31:0] mem_din,  // data(inst) from mctrl
-        output wire [31:0] mem_aout, // address to mctrl
-        output wire        mem_enable,
+        output  reg [31:0] mem_aout, // address to mctrl
+        output  reg        mem_enable, // let mctrl ifetch
 
         //ifetcher
-        input wire        ifetch_valid,
-        input wire [31:0] ifetch_pc,   // pc from ifetcher
-        output reg [31:0] ifetch_dout, // data(inst) to ifetcher
-        output reg        ifetch_enable
+        input  wire [31:0] ifetch_pc,   // pc from ifetcher (wire), always valid
+        output wire [31:0] ifetch_dout, // data(inst) to ifetcher
+        output wire        ifetch_enable // debug: shouldn't be activated double times for same pc
     );
 
-    reg  [`ICEntries-1:0] valid;
-    reg  [17:11] tag   [`ICEntries-1:0];
-    reg  [31:0]  data  [`ICEntries-1:0]; // inst
+    reg  [`ICEntries - 1:0] valid;
+    reg  [17:11]            tag   [`ICEntries - 1:0];
+    reg  [31:0]             data  [`ICEntries - 1:0]; // inst
 
     wire [31:0] pc = ifetch_pc;
     wire [10:2] index = pc[10:2];
     wire        hit = valid[index] && tag[index] == pc[17:11];
 
-    assign mem_aout = pc;
-    assign mem_enable = ifetch_valid && !hit && !mem_valid;
+    assign ifetch_enable = (hit || mem_valid) && mem_aout == pc;
+    assign ifetch_dout = hit ? data[index] : mem_din;
+
+    reg busy; // icache is busy loading missing data
 
     always @(posedge clk) begin
         if (rst) begin
+            busy <= `False;
             valid <= 0;
-            ifetch_enable <= `False;
+            mem_enable <= `False;
         end
-
-        else if (rdy && ifetch_valid) begin
-            if (hit) begin
-                ifetch_dout <= data[index];
-                ifetch_enable <= `True;
+        else if (rdy) begin
+            if (busy) begin
+                //wait for mem_valid
+                if (mem_valid) begin
+                    valid[index] <= `True;
+                    tag[index] <= pc[17:11];
+                    data[index] <= mem_din;
+                    mem_enable <= `False;
+                    busy <= `False;
+                end
             end
-            else begin // miss
-                ifetch_enable <= mem_valid;
-                ifetch_dout <= mem_din;
+            else begin
+                //if cache miss, start loading data from mem
+                if (~hit) begin
+                    mem_aout <= pc;
+                    mem_enable <= `True;
+                    busy <= `True;
+                end
             end
-
-            if (mem_valid) begin // update icache
-                valid[index] <= `True;
-                tag[index] <= pc[17:11];
-                data[index] <= mem_din;
-            end
-        end
-
-        else begin
-            ifetch_enable <= `False;
         end
     end
 

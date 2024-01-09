@@ -58,33 +58,34 @@ module memCtrl(
                     LSB_enable <= `False;
                     pos <= 0;
                     mem_wr <= 0;
-                    if (icache_valid) begin
-                        mem_a <= icache_ain;
-                        status <= IFETCH;
-                    end
-                    else if (LSB_valid) begin
-                        mem_a <= LSB_ain;
+                    if (LSB_valid) begin
                         if (LSB_wr) begin // write
                             status <= STORE; // unwrite yet for mem_wr = 0
+                            mem_a <= 0; // debug: mem_a should sync with mem_wr
                         end
                         else begin // read
                             status <= LOAD; // start reading
+                            mem_a <= LSB_ain;
                         end
+                    end
+                    else if (icache_valid) begin
+                        mem_a <= icache_ain;
+                        status <= IFETCH;
                     end
                 end
                 IFETCH: begin
                     if (icache_valid) begin
                         case (pos)
-                            3'd0:
-                                icache_dout[7:0] <= mem_din;
                             3'd1:
-                                icache_dout[15:8] <= mem_din;
+                                icache_dout[7:0] <= mem_din;
                             3'd2:
-                                icache_dout[23:16] <= mem_din;
+                                icache_dout[15:8] <= mem_din;
                             3'd3:
+                                icache_dout[23:16] <= mem_din;
+                            3'd4:
                                 icache_dout[31:24] <= mem_din;
                         endcase
-                        if (pos == 3'd3) begin
+                        if (pos == 3'd4) begin
                             status <= IDLE;
                             icache_enable <= `True;
                         end
@@ -141,13 +142,10 @@ module memCtrl(
                             mem_wr <= 0; // stop writing
                             LSB_enable <= `True;
                         end
-                        else if (pos == 0) begin
-                            pos <= 1;
-                            mem_wr <= 1; // start writing, no need to update mem_a
-                        end
                         else begin
+                            mem_wr <= 1;
                             pos <= pos + 1;
-                            mem_a <= mem_a + 1;
+                            mem_a <= (pos == 0)? LSB_ain : mem_a + 1;
                         end
                     end
                     else begin

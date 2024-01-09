@@ -6,3 +6,4 @@ riscv/testspace/*
 !.keep
 
 .vscode/*
+riscv/test.data

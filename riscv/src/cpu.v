@@ -73,7 +73,6 @@ module cpu(
                 .LSB_dout       	( data_mem_to_lsb )
             );
 
-    wire                  valid_ifetch_to_ic;
     wire [31:0]           pc_ifetch_to_ic;
     wire                  valid_ic_to_ifetch;
     wire [31:0]           inst_ic_to_ifetch;
@@ -86,7 +85,6 @@ module cpu(
                .mem_din        	( data_mem_to_ic  ),
                .mem_aout       	( addr_ic_to_mem  ),
                .mem_enable     	( valid_ic_to_mem ),
-               .ifetch_valid   	( valid_ifetch_to_ic ),
                .ifetch_pc      	( pc_ifetch_to_ic ),
                .ifetch_dout    	( inst_ic_to_ifetch ),
                .ifetch_enable  	( valid_ic_to_ifetch )
@@ -119,9 +117,8 @@ module cpu(
                  .clk            	( clk_in          ),
                  .rst            	( rst_in          ),
                  .rdy            	( rdy_in          ),
-                 .icache_valid   	( valid_ic_to_ifetch ),
+                 .icache_hit   	    ( valid_ic_to_ifetch ),
                  .icache_inst    	( inst_ic_to_ifetch ),
-                 .icache_enable  	( valid_ifetch_to_ic ),
                  .pc_to_icache      ( pc_ifetch_to_ic ),
                  .issue_valid 	    ( issue_valid ),
                  .issue_inst     	( issue_inst  ),
