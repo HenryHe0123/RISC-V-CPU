@@ -37,6 +37,11 @@ module RS(
         input wire [31:0]      B_LSB_result,
         input wire [`ROBRange] B_LSB_rdTag,
 
+        //commit
+        input wire             commit_valid,
+        input wire [31:0]      commit_rdVal,
+        input wire [`ROBRange] commit_rdTag,
+
         input wire             rollback,
         output reg             RS_full
     );
@@ -63,6 +68,7 @@ module RS(
         if (rst || rollback) begin
             busy <= 0;
             RS_full <= `False;
+            ALU_enable <= `False;
         end
         else if (rdy) begin
             if (issue_valid) begin
@@ -131,9 +137,24 @@ module RS(
                 end
             end
 
+            if (commit_valid) begin
+                for (i = 0; i < `RSSize; i = i + 1) begin
+                    if (busy[i]) begin
+                        if (~Rj[i] && Qj[i] == commit_rdTag) begin
+                            Rj[i] <= `True;
+                            Vj[i] <= commit_rdVal;
+                        end
+                        if (~Rk[i] && Qk[i] == commit_rdTag) begin
+                            Rk[i] <= `True;
+                            Vk[i] <= commit_rdVal;
+                        end
+                    end
+                end
+            end
+
             if (free_pos == 0) begin
                 RS_full <= `True;
-            end 
+            end
             else begin
                 RS_full <= `False;
             end

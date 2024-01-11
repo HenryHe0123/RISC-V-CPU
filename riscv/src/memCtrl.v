@@ -61,11 +61,11 @@ module memCtrl(
                     if (LSB_valid) begin
                         if (LSB_wr) begin // write
                             status <= STORE; // unwrite yet for mem_wr = 0
-                            mem_a <= 0; // debug: mem_a should sync with mem_wr
+                            mem_a <= 0; // debug: mem_a should sync with mem_wr (maybe IO)
                         end
                         else begin // read
                             status <= LOAD; // start reading
-                            mem_a <= LSB_ain;
+                            mem_a <= LSB_ain; // debug: mem_a updated in next cycle
                         end
                     end
                     else if (icache_valid) begin
@@ -100,22 +100,22 @@ module memCtrl(
                 end
                 LOAD: begin
                     if (LSB_valid) begin
+                        // debug: mem_din incorrect when pos = 0
+                        case (pos)
+                            3'd1:
+                                LSB_dout[7:0] <= mem_din;
+                            3'd2:
+                                LSB_dout[15:8] <= mem_din;
+                            3'd3:
+                                LSB_dout[23:16] <= mem_din;
+                            3'd4:
+                                LSB_dout[31:24] <= mem_din;
+                        endcase
                         if (pos == LSB_len) begin
                             status <= IDLE;
-                            mem_a <= 0;
                             LSB_enable <= `True;
                         end
                         else begin
-                            case (pos)
-                                3'd0:
-                                    LSB_dout[7:0] <= mem_din;
-                                3'd1:
-                                    LSB_dout[15:8] <= mem_din;
-                                3'd2:
-                                    LSB_dout[23:16] <= mem_din;
-                                3'd3:
-                                    LSB_dout[31:24] <= mem_din;
-                            endcase
                             pos <= pos + 1;
                             mem_a <= mem_a + 1;
                         end

@@ -15,9 +15,8 @@ module IFetcher(
         //issue (to several modules)
         //issue_rdTag/Q/V/R are also controlled by issue_valid signal
         output reg         issue_valid,
-        output wire [31:0] issue_inst, 
         output reg  [31:0] issue_pc,
-        output wire        issue_predict,
+        output reg         issue_predict,
 
         //decode
         output reg [5:0]  issue_optype,
@@ -47,11 +46,9 @@ module IFetcher(
 
     reg [31:0] pc;
     reg        stall; //stall ifetch when meet jalr
-    wire       predict;
+    wire       predict; //corresponding to (current) pc
 
     assign pc_to_icache = pc;
-    assign issue_predict = predict;
-    assign issue_inst = icache_inst;
 
     predictor _predictor(
                   .clk(clk),
@@ -107,6 +104,7 @@ module IFetcher(
                     issue_rs2 <= rs2;
                     issue_rd <= rd;
                     issue_imm <= imm;
+                    issue_predict <= predict; //debug: shouldn't use wire here
                     //update pc or stall for jalr
                     if ((opcode == `BOP && predict) || opcode == `JALOP) begin
                         pc <= pc + imm; //branch taken or jal

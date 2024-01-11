@@ -17,7 +17,7 @@ module ICache(
         //ifetcher
         input  wire [31:0] ifetch_pc,   // pc from ifetcher (wire), always valid
         output wire [31:0] ifetch_dout, // data(inst) to ifetcher
-        output wire        ifetch_enable // debug: shouldn't be activated double times for same pc
+        output wire        ifetch_enable
     );
 
     reg  [`ICEntries - 1:0] valid;
@@ -26,9 +26,10 @@ module ICache(
 
     wire [31:0] pc = ifetch_pc;
     wire [10:2] index = pc[10:2];
+    wire [10:2] pre_index = mem_aout[10:2]; // debug: pc will be changed in ifetcher when accessing mem
     wire        hit = valid[index] && tag[index] == pc[17:11];
 
-    assign ifetch_enable = (hit || mem_valid) && mem_aout == pc;
+    assign ifetch_enable = hit || (mem_valid && mem_aout == pc);
     assign ifetch_dout = hit ? data[index] : mem_din;
 
     reg busy; // icache is busy loading missing data
@@ -43,9 +44,9 @@ module ICache(
             if (busy) begin
                 //wait for mem_valid
                 if (mem_valid) begin
-                    valid[index] <= `True;
-                    tag[index] <= pc[17:11];
-                    data[index] <= mem_din;
+                    valid[pre_index] <= `True;
+                    tag[pre_index] <= mem_aout[17:11];
+                    data[pre_index] <= mem_din;
                     mem_enable <= `False;
                     busy <= `False;
                 end

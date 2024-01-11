@@ -11,7 +11,7 @@ module regFile(
         input wire              issue_valid,
         input wire  [4:0]       issue_rs1,   //reg index
         input wire  [4:0]       issue_rs2,
-        input wire  [4:0]       issue_rd,    
+        input wire  [4:0]       issue_rd,
 
         output wire [`ROBRange] issue_Qj,
         output wire [`ROBRange] issue_Qk,
@@ -38,15 +38,25 @@ module regFile(
     reg [31:0]      regVal  [REG_NUM - 1:0];
     reg [`ROBRange] regTag  [REG_NUM - 1:0];
     reg             regBusy [REG_NUM - 1:0];
+    
+    //debug: don't forget to rule out ROB_rd zero!
+    wire            rs1_committing = commit_valid && ROB_rd != 0 && ROB_rd == issue_rs1; 
+    wire            rs2_committing = commit_valid && ROB_rd != 0 && ROB_rd == issue_rs2;
+
+    //debug: forwarding from ROB is necessary
+    wire            Rj = ~regBusy[issue_rs1] || rs1_committing;
+    wire            Rk = ~regBusy[issue_rs2] || rs2_committing;
+    wire [31:0]     Vj = rs1_committing ? ROB_rdVal : (~regBusy[issue_rs1] ? regVal[issue_rs1] : 0);
+    wire [31:0]     Vk = rs2_committing ? ROB_rdVal : (~regBusy[issue_rs2] ? regVal[issue_rs2] : 0);
 
     assign issue_Qj = issue_valid ? regTag[issue_rs1] : 0;
     assign issue_Qk = issue_valid ? regTag[issue_rs2] : 0;
 
-    assign issue_Vj = (issue_valid && ~regBusy[issue_rs1]) ? regVal[issue_rs1] : 0;
-    assign issue_Vk = (issue_valid && ~regBusy[issue_rs2]) ? regVal[issue_rs2] : 0;
+    assign issue_Vj = issue_valid ? Vj : 0;
+    assign issue_Vk = issue_valid ? Vk : 0;
 
-    assign issue_Rj = (issue_valid && ~regBusy[issue_rs1]) ? `True : `False; //true: ready (unbusy)
-    assign issue_Rk = (issue_valid && ~regBusy[issue_rs2]) ? `True : `False;
+    assign issue_Rj = issue_valid && Rj; // true: ready
+    assign issue_Rk = issue_valid && Rk;
 
     integer i;
 
@@ -73,7 +83,7 @@ module regFile(
                         regBusy[ROB_rd] <= `False;
                     end
                 end
-                
+
                 if (rename_valid && issue_rd != 0) begin //rename
                     regTag[issue_rd] <= issue_rdTag;
                     regBusy[issue_rd] <= `True;

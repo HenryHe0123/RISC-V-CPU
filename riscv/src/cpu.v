@@ -91,7 +91,6 @@ module cpu(
            );
 
     wire                 issue_valid; //ifetcher issue valid
-    wire [31:0]          issue_inst;
     wire [31:0]          issue_pc;
     wire                 issue_predict;
     wire [5:0]           issue_optype;
@@ -121,7 +120,6 @@ module cpu(
                  .icache_inst    	( inst_ic_to_ifetch ),
                  .pc_to_icache      ( pc_ifetch_to_ic ),
                  .issue_valid 	    ( issue_valid ),
-                 .issue_inst     	( issue_inst  ),
                  .issue_pc       	( issue_pc    ),
                  .issue_predict  	( issue_predict ),
                  .issue_optype   	( issue_optype  ),
@@ -244,6 +242,9 @@ module cpu(
            .B_LSB_valid    	( B_LSB_valid     ),
            .B_LSB_result   	( B_LSB_result    ),
            .B_LSB_rdTag    	( B_LSB_rdTag     ),
+           .commit_valid   	( ROB_commit_valid ),
+           .commit_rdVal   	( ROB_commit_rdVal ),
+           .commit_rdTag   	( ROB_commit_rdTag ),
            .rollback       	( rollback        ),
            .RS_full        	( RS_full         )
        );
@@ -317,6 +318,8 @@ module cpu(
             .ROB_commit_store   ( ROB_commit_store ),
             .ROB_commitTag      ( ROB_commit_rdTag ),
             .ROB_topTag     	( ROB_topTag      ),
+            .ROB_commit_valid   ( ROB_commit_valid ),
+            .ROB_commitVal      ( ROB_commit_rdVal ),
             .mem_valid      	( valid_mem_to_lsb ),
             .mem_dout      	    ( data_mem_to_lsb  ),
             .mem_enable     	( valid_lsb_to_mem ),

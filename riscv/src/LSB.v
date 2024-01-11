@@ -23,6 +23,8 @@ module LSB(
         input wire             ROB_commit_store,
         input wire [`ROBRange] ROB_commitTag,
         input wire [`ROBRange] ROB_topTag,
+        input wire             ROB_commit_valid,
+        input wire [31:0]      ROB_commitVal,
 
         //mctrl
         input wire        mem_valid,
@@ -76,6 +78,7 @@ module LSB(
     integer i;
 
     always @(posedge clk) begin
+        B_LSB_valid <= `False; // debug: forget to turn off B_LSB
         if (rst || (rollback && last_commit == head)) begin
             head <= 0;
             tail <= 0;
@@ -155,6 +158,21 @@ module LSB(
                             end
                             if (~Rk[i] && Qk[i] == B_LSB_rdTag) begin
                                 Vk[i] <= B_LSB_result;
+                                Rk[i] <= `True;
+                            end
+                        end
+                    end
+                end
+
+                if (ROB_commit_valid) begin
+                    for (i = 0; i < `LSBSize; i = i + 1) begin
+                        if (busy[i]) begin
+                            if (~Rj[i] && Qj[i] == ROB_commitTag) begin
+                                Vj[i] <= ROB_commitVal;
+                                Rj[i] <= `True;
+                            end
+                            if (~Rk[i] && Qk[i] == ROB_commitTag) begin
+                                Vk[i] <= ROB_commitVal;
                                 Rk[i] <= `True;
                             end
                         end

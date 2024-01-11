@@ -44,7 +44,7 @@ module ROB(
         output wire            ROB_full
     );
 
-    reg                  ready   [`ROBSize - 1:0];
+    reg [`ROBSize - 1:0] ready;
     reg [5:0]            op      [`ROBSize - 1:0];
     reg [4:0]            rd      [`ROBSize - 1:0];
     reg [31:0]           value   [`ROBSize - 1:0]; // 0/1 for br instruction (true result)
@@ -71,8 +71,9 @@ module ROB(
         if (rst || rollback) begin
             head <= 0;
             tail <= 0;
+            ready <= 0;
             for (i = 0; i < `ROBSize; i = i + 1) begin
-                ready[i] <= 0;
+                //ready[i] <= 0;
                 rd[i] <= 0;
                 value[i] <= 0;
             end
@@ -83,7 +84,9 @@ module ROB(
         end
         else if (rdy) begin
             if (issue_valid) begin
-                ready[next] <= (issue_rd == 0); //ready for B/S
+                //ready[next] <= (issue_rd == 0); //ready for B/S
+                ready[next] <= (issue_op >= `BEQ && issue_op <= `BGEU) ? 0 : (issue_rd == 0);
+                // debug: ready for S, unready for Branch!
                 op[next] <= issue_op;
                 rd[next] <= issue_rd;
                 resetPC[next] <= issue_pc + (issue_predict? 4: issue_imm); //different with prediction
