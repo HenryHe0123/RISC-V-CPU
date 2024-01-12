@@ -51,6 +51,8 @@ module cpu(
     wire                  valid_mem_to_lsb;
     wire [31:0]           data_mem_to_lsb;
 
+    wire                  io_buffer_full_sim = 0;
+
     memCtrl u_memCtrl(
                 .clk            	( clk_in          ),
                 .rst            	( rst_in          ),
@@ -59,7 +61,7 @@ module cpu(
                 .mem_dout       	( mem_dout        ),
                 .mem_a          	( mem_a           ),
                 .mem_wr         	( mem_wr          ),
-                .io_buffer_full 	( io_buffer_full  ),
+                .io_buffer_full 	( io_buffer_full_sim  ),
                 .icache_valid   	( valid_ic_to_mem ),
                 .icache_ain     	( addr_ic_to_mem  ),
                 .icache_enable  	( valid_mem_to_ic ),

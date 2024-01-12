@@ -12,10 +12,10 @@
 `define ROBRange    4:0
 `define ROBWidth    5
 
-`define RSSize      16
+`define RSSize      32
 
-`define LSBSize     16
-`define LSBRange    3:0
+`define LSBSize     32
+`define LSBRange    4:0
 
 `define PredRange   9:3  //7
 `define PredSize    128
