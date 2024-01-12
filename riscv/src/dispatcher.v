@@ -28,7 +28,8 @@ module dispatcher(
         output reg              LSB_enable // load/store instruction
     );
 
-    assign issue_rdTag = (ifetch_valid && ~ROB_full) ? ROB_nextTag : 0;
+    // debug: no need to check if RS/ROB/LSB (next) full
+    assign issue_rdTag = ifetch_valid ? ROB_nextTag : 0;
 
     always @(*) begin
         ROB_enable = `False;
