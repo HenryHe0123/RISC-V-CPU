@@ -67,6 +67,8 @@ module RS(
     always @(posedge clk) begin
         if (rst || rollback) begin
             busy <= 0;
+            Rj   <= 0;
+            Rk   <= 0;
             RS_full <= `False;
             ALU_enable <= `False;
         end

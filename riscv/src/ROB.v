@@ -84,7 +84,6 @@ module ROB(
         end
         else if (rdy) begin
             if (issue_valid) begin
-                //ready[next] <= (issue_rd == 0); //ready for B/S
                 ready[next] <= (issue_op >= `BEQ && issue_op <= `BGEU) ? 0 : (issue_rd == 0);
                 // debug: ready for S, unready for Branch!
                 op[next] <= issue_op;

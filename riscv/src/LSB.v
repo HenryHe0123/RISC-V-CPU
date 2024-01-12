@@ -97,10 +97,11 @@ module LSB(
                 tail <= last_commit;
                 for (i = 0; i < `LSBSize; i = i + 1) begin
                     //clear uncommitted entries
-                    if (~committed[i]) begin
+                    if (~busy[i] || ~committed[i]) begin
                         busy[i] <= 0;
                         Rj[i] <= 0;
                         Rk[i] <= 0;
+                        committed[i] <= 0;
                     end
                 end
 
@@ -113,8 +114,7 @@ module LSB(
                     Rk[top] <= 0;
                     committed[top] <= 0;
                     head <= top;
-                    if (last_commit == head)
-                        last_commit <= top;
+                    if (last_commit == head) last_commit <= top;
                 end
             end
             else begin

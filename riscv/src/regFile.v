@@ -38,10 +38,11 @@ module regFile(
     reg [31:0]      regVal  [REG_NUM - 1:0];
     reg [`ROBRange] regTag  [REG_NUM - 1:0];
     reg             regBusy [REG_NUM - 1:0];
-    
+
     //debug: don't forget to rule out ROB_rd zero!
-    wire            rs1_committing = commit_valid && ROB_rd != 0 && ROB_rd == issue_rs1; 
-    wire            rs2_committing = commit_valid && ROB_rd != 0 && ROB_rd == issue_rs2;
+    //debug: don't forget to check if latest regTag!
+    wire            rs1_committing = commit_valid && ROB_rd != 0 && ROB_rd == issue_rs1 && regTag[issue_rs1] == ROB_rdTag && regBusy[issue_rs1];
+    wire            rs2_committing = commit_valid && ROB_rd != 0 && ROB_rd == issue_rs2 && regTag[issue_rs2] == ROB_rdTag && regBusy[issue_rs2];
 
     //debug: forwarding from ROB is necessary
     wire            Rj = ~regBusy[issue_rs1] || rs1_committing;
@@ -69,6 +70,16 @@ module regFile(
             end
         end
         else if (rdy) begin
+            //commit
+            if (commit_valid && ROB_rd != 0) begin
+                regVal[ROB_rd] <= ROB_rdVal;
+                if (regBusy[ROB_rd] && ROB_rdTag == regTag[ROB_rd]) begin
+                    regTag[ROB_rd] <= 0;
+                    regBusy[ROB_rd] <= `False;
+                end
+            end
+
+            //rename
             if (rollback) begin
                 for (i = 0; i < REG_NUM; i = i + 1) begin
                     regTag[i] <= 0;
@@ -76,15 +87,7 @@ module regFile(
                 end
             end
             else begin
-                if (commit_valid && ROB_rd != 0) begin //commit
-                    regVal[ROB_rd] <= ROB_rdVal;
-                    if (regBusy[ROB_rd] && ROB_rdTag == regTag[ROB_rd]) begin
-                        regTag[ROB_rd] <= 0;
-                        regBusy[ROB_rd] <= `False;
-                    end
-                end
-
-                if (rename_valid && issue_rd != 0) begin //rename
+                if (rename_valid && issue_rd != 0) begin
                     regTag[issue_rd] <= issue_rdTag;
                     regBusy[issue_rd] <= `True;
                 end
