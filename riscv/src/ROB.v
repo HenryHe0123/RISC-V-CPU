@@ -63,7 +63,9 @@ module ROB(
 
     assign ROB_topTag = top;
     assign ROB_nextTag = next;
-    assign ROB_full = (next == head);
+    assign ROB_full = tail >= head
+           ? tail - head + 2 >= `ROBSize
+           : tail + 2 >= head;
 
     integer i;
 

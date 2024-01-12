@@ -43,7 +43,7 @@ module RS(
         input wire [`ROBRange] commit_rdTag,
 
         input wire             rollback,
-        output reg             RS_full
+        output wire            RS_full
     );
 
     reg  [`RSSize - 1:0] busy;
@@ -60,7 +60,12 @@ module RS(
 
     wire [`RSSize - 1:0] ready = Rj & Rk & busy;
     wire [`RSSize - 1:0] ready_pos = ready & (-ready); //only first ready position 1
-    wire [`RSSize - 1:0] free_pos = (~busy) & (-(~busy)); //only first free position 1
+    wire [`RSSize - 1:0] free = ~busy;
+    wire [`RSSize - 1:0] free_pos = free & (-free); //only first free position 1
+
+    //debug: RS accept issue in next cycle, so we have to output if RS full after next cycle
+
+    assign RS_full = free == free_pos; //free pos less than 2, RS full in next cycle
 
     integer i;
 
@@ -69,7 +74,6 @@ module RS(
             busy <= 0;
             Rj   <= 0;
             Rk   <= 0;
-            RS_full <= `False;
             ALU_enable <= `False;
         end
         else if (rdy) begin
@@ -152,13 +156,6 @@ module RS(
                         end
                     end
                 end
-            end
-
-            if (free_pos == 0) begin
-                RS_full <= `True;
-            end
-            else begin
-                RS_full <= `False;
             end
         end
     end

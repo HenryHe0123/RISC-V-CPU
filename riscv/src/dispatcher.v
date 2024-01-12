@@ -38,11 +38,11 @@ module dispatcher(
 
         if (~rst && rdy && ifetch_valid) begin
             ROB_enable = `True;
-            reg_rename_enable = ~ROB_full;
+            reg_rename_enable = `True;
             if (ifetch_optype >= `LB && ifetch_optype <= `SW)
-                LSB_enable = ~LSB_full;
+                LSB_enable = `True;
             else
-                RS_enable = ~RS_full;
+                RS_enable = `True;
         end
     end
 

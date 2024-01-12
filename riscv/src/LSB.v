@@ -73,7 +73,10 @@ module LSB(
     wire                 top_Input = (top_addr[17:16] == 2'b11) && top_load; // read from input
     wire                 isEmpty = (head == tail);
 
-    assign LSB_full = (next == head);
+    // debug: LSB (maybe) full in next cycle
+    assign LSB_full = tail >= head
+           ? tail - head + 2 >= `LSBSize
+           : tail + 2 >= head;
 
     integer i;
 
@@ -114,7 +117,8 @@ module LSB(
                     Rk[top] <= 0;
                     committed[top] <= 0;
                     head <= top;
-                    if (last_commit == head) last_commit <= top;
+                    if (last_commit == head)
+                        last_commit <= top;
                 end
             end
             else begin
@@ -181,7 +185,7 @@ module LSB(
 
                 if (ROB_commit_store) begin
                     for (i = 0; i < `LSBSize; i = i + 1) begin
-                        if (busy[i] && rdTag[i] == ROB_commitTag) begin
+                        if (busy[i] && rdTag[i] == ROB_commitTag && ~committed[i]) begin
                             committed[i] <= `True;
                             last_commit <= i;
                         end
