@@ -59,7 +59,11 @@ module memCtrl(
                     icache_enable <= `False;
                     LSB_enable <= `False;
                     mem_wr <= 0;
+                    pos <= 0;
                     if (~icache_enable && ~LSB_enable) begin
+                        // wait a cycle to avoid potential conflict
+                        // refer to @qweryy0566
+                        // original implementation failed FPGA test
                         if (LSB_valid) begin
                             if (LSB_wr) begin // write
                                 status <= STORE; // unwrite yet for mem_wr = 0
@@ -69,12 +73,10 @@ module memCtrl(
                                 status <= LOAD; // start reading
                                 mem_a <= LSB_ain; // debug: mem_a updated in next cycle
                             end
-                            pos <= 0;
                         end
                         else if (icache_valid) begin
                             mem_a <= icache_ain;
                             status <= IFETCH;
-                            pos <= 0;
                         end
                     end
                 end
@@ -132,7 +134,7 @@ module memCtrl(
                 end
                 STORE: begin
                     if (~io_fail) begin
-                        mem_wr <= 1;
+                        // debug: pause when io buffer full, store operation shouldn't be discarded
                         case (pos)
                             3'd0:
                                 mem_dout <= LSB_din[7:0];
@@ -150,7 +152,7 @@ module memCtrl(
                             LSB_enable <= `True;
                         end
                         else begin
-                            // mem_wr <= 1;
+                            mem_wr <= 1;
                             pos <= pos + 1;
                             mem_a <= (pos == 0)? LSB_ain : mem_a + 1;
                         end

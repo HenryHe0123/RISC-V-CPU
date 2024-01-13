@@ -99,7 +99,7 @@ module LSB(
             if (rollback) begin
                 tail <= last_commit;
                 for (i = 0; i < `LSBSize; i = i + 1) begin
-                    //clear uncommitted entries
+                    // clear uncommitted entries
                     if (~busy[i] || ~committed[i]) begin
                         busy[i] <= 0;
                         Rj[i] <= 0;
@@ -111,7 +111,7 @@ module LSB(
                 if (isWaitingMem && mem_valid) begin // top entry finished
                     mem_enable <= `False;
                     isWaitingMem <= `False;
-                    //retire top entry
+                    // retire top entry
                     busy[top] <= 0;
                     Rj[top] <= 0;
                     Rk[top] <= 0;
@@ -195,7 +195,7 @@ module LSB(
                 // execute
                 if (isWaitingMem) begin
                     if (mem_valid) begin // top entry executed
-                        if (top_load) begin //broadcast
+                        if (top_load) begin // broadcast
                             B_LSB_valid <= `True;
                             B_LSB_rdTag <= rdTag[top];
                             case (op[top])

@@ -75,7 +75,6 @@ module ROB(
             tail <= 0;
             ready <= 0;
             for (i = 0; i < `ROBSize; i = i + 1) begin
-                //ready[i] <= 0;
                 rd[i] <= 0;
                 value[i] <= 0;
             end
