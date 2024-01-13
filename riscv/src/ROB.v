@@ -105,11 +105,6 @@ module ROB(
                 value[B_LSB_rdTag] <= B_LSB_result;
             end
 
-            rollback <= `False;
-            commit_valid <= `False;
-            commit_store <= `False;
-            ROB_predict_updFlag <= `False;
-
             //commit
             if (~isEmpty && ready[top]) begin
                 commit_valid <= `True;
@@ -118,9 +113,12 @@ module ROB(
                 commit_rdVal <= value[top];
 
                 if (top_is_store) begin
+                    rollback <= `False;
                     commit_store <= `True;
+                    ROB_predict_updFlag <= `False;
                 end
                 else if (top_is_branch) begin
+                    commit_store <= `False;
                     ROB_predict_updFlag <= `True;
                     ROB_branch_updResult <= value[top][0];
                     ROB_branch_updPC <= pc[top];
@@ -129,10 +127,24 @@ module ROB(
                         rollback <= `True;
                         ROB_reset_pc <= resetPC[top];
                     end
+                    else begin
+                        rollback <= `False;
+                    end
                 end
+                else begin
+                    rollback <= `False;
+                    commit_store <= `False;
+                end
+
                 //retire
                 head <= top;
                 ready[top] <= `False;
+            end
+            else begin
+                rollback <= `False;
+                commit_valid <= `False;
+                commit_store <= `False;
+                ROB_predict_updFlag <= `False;
             end
         end
     end

@@ -1,8 +1,7 @@
 //Instruction Fetcher
 //including predictor and decoder
 
-`include "predictor.v"
-`include "decoder.v"
+`include "defines.v"
 
 module IFetcher(
         input wire clk, rst, rdy,

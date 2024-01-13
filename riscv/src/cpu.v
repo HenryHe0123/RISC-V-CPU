@@ -1,15 +1,7 @@
 // RISCV32I CPU top module
 // port modification allowed for debugging purposes
 
-`include "memCtrl.v"
-`include "ICache.v"
-`include "IFetcher.v"
-`include "dispatcher.v"
-`include "regFile.v"
-`include "RS.v"
-`include "ALU.v"
-`include "ROB.v"
-`include "LSB.v"
+`include "defines.v"
 
 module cpu(
         input  wire                 clk_in,			// system clock signal
@@ -61,7 +53,7 @@ module cpu(
                 .mem_dout       	( mem_dout        ),
                 .mem_a          	( mem_a           ),
                 .mem_wr         	( mem_wr          ),
-                .io_buffer_full 	( io_buffer_full_sim  ),
+                .io_buffer_full 	( io_buffer_full  ),
                 .icache_valid   	( valid_ic_to_mem ),
                 .icache_ain     	( addr_ic_to_mem  ),
                 .icache_enable  	( valid_mem_to_ic ),
@@ -156,12 +148,9 @@ module cpu(
                    .ifetch_optype  	( issue_optype ),
                    .reg_rename_enable	( reg_rename_valid ),
                    .issue_rdTag    	( issue_rdTag ),
-                   .ROB_full       	( ROB_full        ),
                    .ROB_nextTag    	( ROB_nextTag     ),
                    .ROB_enable     	( ROB_issue_valid ),
-                   .RS_full        	( RS_full         ),
                    .RS_enable      	( RS_issue_valid ),
-                   .LSB_full       	( LSB_full        ),
                    .LSB_enable     	( LSB_issue_valid )
                );
 

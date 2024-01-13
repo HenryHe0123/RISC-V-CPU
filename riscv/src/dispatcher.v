@@ -15,16 +15,13 @@ module dispatcher(
         output wire [`ROBRange] issue_rdTag,
 
         //rob
-        input  wire             ROB_full,
         input  wire [`ROBRange] ROB_nextTag,
         output reg              ROB_enable,
 
         //rs
-        input  wire             RS_full,
         output reg              RS_enable,
 
         //lsb
-        input  wire             LSB_full,
         output reg              LSB_enable // load/store instruction
     );
 

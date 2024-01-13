@@ -4,7 +4,9 @@
 `define True        1'b1
 `define False       1'b0
 
-`define ICEntries   512
+`define ICEntries   256
+`define ICIDRange   9:2  //8
+`define ICTGRange   17:10
 
 `define RegWidth    5
 

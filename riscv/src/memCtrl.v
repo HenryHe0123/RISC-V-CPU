@@ -46,10 +46,12 @@ module memCtrl(
             LSB_enable <= `False;
         end
         else if (~rdy) begin // pause
-            mem_a <= 0;
-            mem_wr <= 0;
-            icache_enable <= `False;
-            LSB_enable <= `False;
+            if (mem_wr) begin
+                mem_a <= 0;
+                mem_wr <= 0;
+                icache_enable <= `False;
+                LSB_enable <= `False;
+            end
         end
         else begin
             case(status)
@@ -114,6 +116,7 @@ module memCtrl(
                         if (pos == LSB_len) begin
                             status <= IDLE;
                             LSB_enable <= `True;
+                            mem_a <= 0;
                         end
                         else begin
                             pos <= pos + 1;
@@ -125,31 +128,33 @@ module memCtrl(
                     end
                 end
                 STORE: begin
-                    if (LSB_valid && ~io_fail) begin
-                        case (pos)
-                            3'd0:
-                                mem_dout <= LSB_din[7:0];
-                            3'd1:
-                                mem_dout <= LSB_din[15:8];
-                            3'd2:
-                                mem_dout <= LSB_din[23:16];
-                            3'd3:
-                                mem_dout <= LSB_din[31:24];
-                        endcase
-                        if (pos == LSB_len) begin
-                            status <= IDLE;
-                            mem_a <= 0;
-                            mem_wr <= 0; // stop writing
-                            LSB_enable <= `True;
+                    if (~io_fail) begin
+                        if (LSB_valid) begin
+                            case (pos)
+                                3'd0:
+                                    mem_dout <= LSB_din[7:0];
+                                3'd1:
+                                    mem_dout <= LSB_din[15:8];
+                                3'd2:
+                                    mem_dout <= LSB_din[23:16];
+                                3'd3:
+                                    mem_dout <= LSB_din[31:24];
+                            endcase
+                            if (pos == LSB_len) begin
+                                status <= IDLE;
+                                mem_a <= 0;
+                                mem_wr <= 0; // stop writing
+                                LSB_enable <= `True;
+                            end
+                            else begin
+                                mem_wr <= 1;
+                                pos <= pos + 1;
+                                mem_a <= (pos == 0)? LSB_ain : mem_a + 1;
+                            end
                         end
                         else begin
-                            mem_wr <= 1;
-                            pos <= pos + 1;
-                            mem_a <= (pos == 0)? LSB_ain : mem_a + 1;
+                            status <= IDLE;
                         end
-                    end
-                    else begin
-                        status <= IDLE;
                     end
                 end
             endcase
