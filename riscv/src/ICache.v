@@ -27,7 +27,7 @@ module ICache(
     wire [31:0]       pc = ifetch_pc;
     wire [`ICIDRange] index = pc[`ICIDRange];
     wire [`ICIDRange] pre_index = mem_aout[`ICIDRange]; // debug: pc will be changed in ifetcher when accessing mem
-    wire              hit = valid[index] && tag[index] == pc[17:11];
+    wire              hit = valid[index] && tag[index] == pc[`ICTGRange];
 
     assign ifetch_enable = hit || (mem_valid && mem_aout == pc);
     assign ifetch_dout = hit ? data[index] : mem_din;
@@ -45,7 +45,7 @@ module ICache(
                 //wait for mem_valid
                 if (mem_valid) begin
                     valid[pre_index] <= `True;
-                    tag[pre_index] <= mem_aout[17:11];
+                    tag[pre_index] <= mem_aout[`ICTGRange];
                     data[pre_index] <= mem_din;
                     mem_enable <= `False;
                     busy <= `False;

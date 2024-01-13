@@ -58,21 +58,24 @@ module memCtrl(
                 IDLE: begin
                     icache_enable <= `False;
                     LSB_enable <= `False;
-                    pos <= 0;
                     mem_wr <= 0;
-                    if (LSB_valid) begin
-                        if (LSB_wr) begin // write
-                            status <= STORE; // unwrite yet for mem_wr = 0
-                            mem_a <= 0; // debug: mem_a should sync with mem_wr (maybe IO)
+                    if (~icache_enable && ~LSB_enable) begin
+                        if (LSB_valid) begin
+                            if (LSB_wr) begin // write
+                                status <= STORE; // unwrite yet for mem_wr = 0
+                                mem_a <= 0; // debug: mem_a should sync with mem_wr (maybe IO)
+                            end
+                            else begin // read
+                                status <= LOAD; // start reading
+                                mem_a <= LSB_ain; // debug: mem_a updated in next cycle
+                            end
+                            pos <= 0;
                         end
-                        else begin // read
-                            status <= LOAD; // start reading
-                            mem_a <= LSB_ain; // debug: mem_a updated in next cycle
+                        else if (icache_valid) begin
+                            mem_a <= icache_ain;
+                            status <= IFETCH;
+                            pos <= 0;
                         end
-                    end
-                    else if (icache_valid) begin
-                        mem_a <= icache_ain;
-                        status <= IFETCH;
                     end
                 end
                 IFETCH: begin
@@ -129,31 +132,27 @@ module memCtrl(
                 end
                 STORE: begin
                     if (~io_fail) begin
-                        if (LSB_valid) begin
-                            case (pos)
-                                3'd0:
-                                    mem_dout <= LSB_din[7:0];
-                                3'd1:
-                                    mem_dout <= LSB_din[15:8];
-                                3'd2:
-                                    mem_dout <= LSB_din[23:16];
-                                3'd3:
-                                    mem_dout <= LSB_din[31:24];
-                            endcase
-                            if (pos == LSB_len) begin
-                                status <= IDLE;
-                                mem_a <= 0;
-                                mem_wr <= 0; // stop writing
-                                LSB_enable <= `True;
-                            end
-                            else begin
-                                mem_wr <= 1;
-                                pos <= pos + 1;
-                                mem_a <= (pos == 0)? LSB_ain : mem_a + 1;
-                            end
+                        mem_wr <= 1;
+                        case (pos)
+                            3'd0:
+                                mem_dout <= LSB_din[7:0];
+                            3'd1:
+                                mem_dout <= LSB_din[15:8];
+                            3'd2:
+                                mem_dout <= LSB_din[23:16];
+                            3'd3:
+                                mem_dout <= LSB_din[31:24];
+                        endcase
+                        if (pos == LSB_len) begin
+                            status <= IDLE;
+                            mem_a <= 0;
+                            mem_wr <= 0; // stop writing
+                            LSB_enable <= `True;
                         end
                         else begin
-                            status <= IDLE;
+                            // mem_wr <= 1;
+                            pos <= pos + 1;
+                            mem_a <= (pos == 0)? LSB_ain : mem_a + 1;
                         end
                     end
                 end
