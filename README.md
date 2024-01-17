@@ -1,6 +1,6 @@
 # RISC-V-CPU
 
-This is a toy RISC-V CPU written in Verilog that supports out of order execution of Tomasulo algorithm and has passed FPGA test. See the complete [project introduction](https://github.com/ACMClassCourse-2022/RISC-V-CPU-2023) here.
+This is a toy RISC-V CPU written in Verilog that supports out of order execution of Tomasulo algorithm and has passed simulation and FPGA test. See the complete [project introduction](https://github.com/ACMClassCourse-2022/RISC-V-CPU-2023) here.
 
 ## Design Graph
 
@@ -25,7 +25,7 @@ flowchart TD
 
 ## Instruction Set
 
-<img src="RV32I.png" style="zoom:40%;">
+<img src="assets/RV32I.png" width="700" align=center /> 
 
 ## FPGA Test
 
